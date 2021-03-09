@@ -46,32 +46,15 @@ driver.switch_to.window(driver.window_handles[-1])
 time.sleep(args.load)
 download_path = args.path
 Path(download_path).mkdir(parents=True, exist_ok=True)
-i = 1
-canvas = util.select_with_timeout(driver, "//div[@id='viewport1']/canvas")
-canvas_base64 = driver.execute_script("return arguments[0].toDataURL('image/png').substring(21);", canvas)
-canvas_png = base64.b64decode(canvas_base64)
-with open(r'{}/page_{}.png'.format(download_path, i), 'wb') as f:
-    f.write(canvas_png)
-i += 1
+i = util.canvas_to_png(driver, "//div[@id='viewport1']/canvas", download_path, 1)
 util.send_keys(driver, Keys.LEFT)
 
 # Download rest of the pages
 while(not util.element_present(driver, "//div[@id='dialog']/div[@style='display: block;']")):
     # viewport0
-    canvas = util.select_with_timeout(driver, "//div[@id='viewport0']/canvas")
-    canvas_base64 = driver.execute_script("return arguments[0].toDataURL('image/png').substring(21);", canvas)
-    canvas_png = base64.b64decode(canvas_base64)
-    with open(r'{}/page_{}.png'.format(download_path, i), 'wb') as f:
-        f.write(canvas_png)
-    i += 1
-
+    i = util.canvas_to_png(driver, "//div[@id='viewport0']/canvas", download_path, i)
     #viewport1
-    canvas = util.select_with_timeout(driver, "//div[@id='viewport1']/canvas")
-    canvas_base64 = driver.execute_script("return arguments[0].toDataURL('image/png').substring(21);", canvas)
-    canvas_png = base64.b64decode(canvas_base64)
-    with open(r'{}/page_{}.png'.format(download_path, i), 'wb') as f:
-        f.write(canvas_png)
-    i += 1
+    i = util.canvas_to_png(driver, "//div[@id='viewport1']/canvas", download_path, i)
 
     util.send_keys(driver, Keys.LEFT)
     util.send_keys(driver, Keys.LEFT)
