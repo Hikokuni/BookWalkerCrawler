@@ -1,10 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from pathlib import Path
-import time, util, base64, os, sys, argparse
+from util import element_present, select_with_timeout, send_keys, canvas_to_png
+import time, argparse
 
 # Setup parser
 parser = argparse.ArgumentParser(description='对BookWalker用爬虫（伪）')
@@ -23,12 +21,12 @@ driver.implicitly_wait(args.wait)
 driver.get("https://global.bookwalker.jp/")
 
 # Sign in and navigate to books page
-util.select_with_timeout(driver, "//span[text()='Sign In']").click()
-util.select_with_timeout(driver, "//input[@name='j_username']").send_keys(args.Username)
-util.select_with_timeout(driver, "//input[@name='j_password']").send_keys(args.Password)
-util.select_with_timeout(driver, "//span[@class='lt_loginBtn' and text()='Sign-in']").click()
-util.select_with_timeout(driver, "(//a[@class='util-menu-btn'])[2]", timeout=60).click()
-util.select_with_timeout(driver, "//section[contains(@class, 'book-item')]")
+select_with_timeout(driver, "//span[text()='Sign In']").click()
+select_with_timeout(driver, "//input[@name='j_username']").send_keys(args.Username)
+select_with_timeout(driver, "//input[@name='j_password']").send_keys(args.Password)
+select_with_timeout(driver, "//span[@class='lt_loginBtn' and text()='Sign-in']").click()
+select_with_timeout(driver, "(//a[@class='util-menu-btn'])[2]", timeout=60).click()
+select_with_timeout(driver, "//section[contains(@class, 'book-item')]")
 
 # Get list of books
 books = driver.find_elements_by_xpath("//section[contains(@class, 'book-item')]//a[@data-action-label='タイトル']")
@@ -39,25 +37,25 @@ for book in books:
 selection = int(input('选择图书序号：'))
 
 # Open book
-util.select_with_timeout(driver, "(//section[contains(@class, 'book-item')]//span[text()='Read this book'])[{}]".format(selection)).click()
+select_with_timeout(driver, "(//section[contains(@class, 'book-item')]//span[text()='Read this book'])[{}]".format(selection)).click()
 driver.switch_to.window(driver.window_handles[-1])
+time.sleep(args.load)
 
 # Deal with special case (first page)
-time.sleep(args.load)
 download_path = args.path
 Path(download_path).mkdir(parents=True, exist_ok=True)
-i = util.canvas_to_png(driver, "//div[@id='viewport1']/canvas", download_path, 1)
-util.send_keys(driver, Keys.LEFT)
+i = canvas_to_png(driver, "//div[@id='viewport1']/canvas", download_path, 1)
+send_keys(driver, Keys.LEFT)
 
 # Download rest of the pages
-while(not util.element_present(driver, "//div[@id='dialog']/div[@style='display: block;']")):
+while(not element_present(driver, "//div[@id='dialog']/div[@style='display: block;']")):
     # viewport0
-    i = util.canvas_to_png(driver, "//div[@id='viewport0']/canvas", download_path, i)
+    i = canvas_to_png(driver, "//div[@id='viewport0']/canvas", download_path, i)
     #viewport1
-    i = util.canvas_to_png(driver, "//div[@id='viewport1']/canvas", download_path, i)
+    i = canvas_to_png(driver, "//div[@id='viewport1']/canvas", download_path, i)
 
-    util.send_keys(driver, Keys.LEFT)
-    util.send_keys(driver, Keys.LEFT)
+    send_keys(driver, Keys.LEFT)
+    send_keys(driver, Keys.LEFT)
 
 driver.close()
 driver.quit()
